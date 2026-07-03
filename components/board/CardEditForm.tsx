@@ -16,12 +16,18 @@ interface CardEditFormProps {
 }
 
 export function CardEditForm({ card, onSubmit, onCancel }: CardEditFormProps) {
+  // 오늘 날짜를 기본값으로 설정
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const [title, setTitle] = useState(card?.title || '');
   const [description, setDescription] = useState(card?.description || '');
   const [priority, setPriority] = useState<'high' | 'medium' | 'low'>(
     card?.priority || 'medium'
   );
-  const [dueDate, setDueDate] = useState(card?.due_date || '');
+  const [dueDate, setDueDate] = useState(card?.due_date || getTodayDate());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,7 +95,7 @@ export function CardEditForm({ card, onSubmit, onCancel }: CardEditFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            우선도
+            Priority
           </label>
           <select
             value={priority}
@@ -99,15 +105,15 @@ export function CardEditForm({ card, onSubmit, onCancel }: CardEditFormProps) {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
             disabled={isLoading}
           >
-            <option value="low">낮음</option>
-            <option value="medium">중간</option>
-            <option value="high">높음</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
           </select>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            기한
+            Due Date
           </label>
           <input
             type="date"
