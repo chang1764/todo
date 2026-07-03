@@ -12,7 +12,7 @@ export function Header() {
           <div className="text-2xl">🎯</div>
           <div>
             <h1 className="text-2xl font-bold text-white">
-              모바일DX
+              슈퍼SOL
             </h1>
             <p className="text-xs text-slate-400">실시간 협업 칸반 보드</p>
           </div>

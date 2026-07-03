@@ -1,4 +1,4 @@
-# 모바일DX 📱
+# 슈퍼SOL 📱
 
 **모바일 최적화된 실시간 협업 칸반 보드** - 소규모 팀(3~10명)을 위해 Next.js, TypeScript, Supabase, @dnd-kit으로 만들었습니다.
 

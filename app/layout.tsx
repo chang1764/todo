@@ -13,10 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "모바일DX - 실시간 협업 칸반 보드",
+  title: "슈퍼SOL - 실시간 협업 칸반 보드",
   description: "실시간 협업 칸반 보드 - 모바일 최적화",
   openGraph: {
-    title: "모바일DX",
+    title: "슈퍼SOL",
     description: "실시간 협업 칸반 보드 - 모바일 최적화",
     type: "website",
     url: "https://todo-eight-smoky-64.vercel.app",
@@ -25,13 +25,13 @@ export const metadata: Metadata = {
         url: "https://todo-eight-smoky-64.vercel.app/og-image.png",
         width: 1200,
         height: 630,
-        alt: "모바일DX - 실시간 협업 칸반 보드",
+        alt: "슈퍼SOL - 실시간 협업 칸반 보드",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "모바일DX",
+    title: "슈퍼SOL",
     description: "실시간 협업 칸반 보드 - 모바일 최적화",
   },
   keywords: ["칸반", "협업", "보드", "실시간", "모바일"],
