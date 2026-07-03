@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Team Kanban Board",
-  description: "Real-time collaborative kanban board for teams",
+  title: "모바일DX",
+  description: "실시간 협업 칸반 보드 - 모바일 최적화",
 };
 
 export default function RootLayout({

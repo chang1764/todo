@@ -12,9 +12,9 @@ export function Header() {
           <div className="text-2xl">🎯</div>
           <div>
             <h1 className="text-2xl font-bold text-white">
-              Team Kanban Board
+              모바일DX
             </h1>
-            <p className="text-xs text-slate-400">Real-time collaboration</p>
+            <p className="text-xs text-slate-400">실시간 협업 칸반 보드</p>
           </div>
         </div>
         <div className="text-xs text-slate-300 flex items-center gap-2">

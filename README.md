@@ -1,16 +1,16 @@
-# Team Kanban Board 🎯
+# 모바일DX 📱
 
-A **real-time collaborative kanban board** for small teams (3–10 people), built with Next.js, TypeScript, Supabase, and @dnd-kit.
+**모바일 최적화된 실시간 협업 칸반 보드** - 소규모 팀(3~10명)을 위해 Next.js, TypeScript, Supabase, @dnd-kit으로 만들었습니다.
 
-## ✨ Features
+## ✨ 기능
 
-- **Real-time Collaboration** — Changes sync instantly across all clients via Supabase Realtime
-- **Card Management** — Create, edit, delete cards with title, description, priority, due date
-- **Column Management** — Add, delete, reorder columns
-- **Drag & Drop** — Drag cards across columns, reorder within columns (@dnd-kit)
-- **Mobile Responsive** — Works on desktop, tablet, and mobile
-- **Live Status** — See connection status and other users' activity
-- **Optimistic Updates** — UI responds instantly; Supabase syncs in background
+- **실시간 협업** — Supabase Realtime으로 모든 클라이언트에 즉시 동기화
+- **카드 관리** — 제목, 설명, 우선도, 기한으로 카드 생성/수정/삭제
+- **컬럼 관리** — 컬럼 추가, 삭제, 재정렬
+- **드래그&드롭** — 카드를 컬럼 간 이동, 순서 변경 (@dnd-kit)
+- **모바일 최적화** — 데스크톱, 태블릿, 모바일 모두 완벽 지원
+- **실시간 상태** — 연결 상태 및 다른 사용자 활동 확인
+- **낙관적 업데이트** — UI는 즉시 반응, Supabase는 백그라운드에서 동기화
 
 ## 🚀 Quick Start
 
