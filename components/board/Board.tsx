@@ -80,7 +80,7 @@ export function Board() {
   return (
     <DndContext onDragEnd={handleBoardDragEnd}>
       <div className="h-full flex flex-col">
-        <div className="flex gap-6 overflow-x-auto pb-4 flex-1">
+        <div className="flex gap-3 md:gap-6 overflow-x-auto pb-4 flex-1 px-2 md:px-0">
           {columns
             .sort((a, b) => a.position - b.position)
             .map((column) => (

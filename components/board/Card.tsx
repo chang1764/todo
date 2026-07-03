@@ -29,32 +29,32 @@ export function Card({ card }: CardProps) {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-grab active:cursor-grabbing group ${
+      className={`bg-white rounded-lg md:rounded-xl border border-gray-200 p-3 md:p-4 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all cursor-grab active:cursor-grabbing group touch-manipulation ${
         isDragging ? 'opacity-50 shadow-xl ring-2 ring-blue-400' : ''
       } ${isHighlighted ? 'ring-2 ring-emerald-300 bg-emerald-50' : ''}`}
     >
       <div className="flex items-start gap-2 mb-2">
-        <span className={`inline-block w-2 h-2 rounded-full mt-1.5 ${priorityColor.dot} flex-shrink-0`}></span>
-        <h4 className="font-semibold text-gray-900 text-sm line-clamp-2 flex-1">
+        <span className={`inline-block w-2.5 h-2.5 md:w-2 md:h-2 rounded-full mt-1 md:mt-1.5 ${priorityColor.dot} flex-shrink-0`}></span>
+        <h4 className="font-semibold text-gray-900 text-sm md:text-sm line-clamp-2 flex-1 leading-tight">
           {card.title}
         </h4>
       </div>
 
       {card.description && (
-        <p className="text-xs text-gray-600 line-clamp-2 mb-3 ml-4">
+        <p className="text-xs text-gray-600 line-clamp-2 mb-2 md:mb-3 ml-4">
           {card.description}
         </p>
       )}
 
-      <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-gray-100">
+      <div className="flex items-center justify-between gap-2 mt-2 md:mt-3 pt-2 md:pt-2 border-t border-gray-100">
         <span
-          className={`text-xs px-2.5 py-1 rounded-full font-medium ${priorityColor.bg} ${priorityColor.text}`}
+          className={`text-xs px-2 md:px-2.5 py-1 rounded-full font-medium ${priorityColor.bg} ${priorityColor.text} whitespace-nowrap`}
         >
           {PRIORITY_LABELS[card.priority]}
         </span>
 
         {card.due_date && (
-          <span className="text-xs text-gray-500 bg-gray-50 px-2.5 py-1 rounded-full">
+          <span className="text-xs text-gray-500 bg-gray-50 px-2 md:px-2.5 py-1 rounded-full whitespace-nowrap">
             {new Date(card.due_date).toLocaleDateString('ko-KR', {
               month: 'short',
               day: 'numeric',

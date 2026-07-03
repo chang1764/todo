@@ -50,7 +50,7 @@ export function CardEditForm({ card, onSubmit, onCancel }: CardEditFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
       {error && (
         <div className="bg-red-50 border border-red-200 rounded p-3">
           <p className="text-sm text-red-600">{error}</p>
@@ -86,7 +86,7 @@ export function CardEditForm({ card, onSubmit, onCancel }: CardEditFormProps) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             우선도
@@ -119,11 +119,11 @@ export function CardEditForm({ card, onSubmit, onCancel }: CardEditFormProps) {
         </div>
       </div>
 
-      <div className="flex gap-2 pt-4">
+      <div className="flex flex-col md:flex-row gap-2 pt-3 md:pt-4">
         <Button
           type="submit"
           disabled={isLoading}
-          className="flex-1"
+          className="flex-1 py-2 md:py-2 text-sm md:text-base"
         >
           {isLoading ? '저장 중...' : card ? '수정' : '생성'}
         </Button>
@@ -132,7 +132,7 @@ export function CardEditForm({ card, onSubmit, onCancel }: CardEditFormProps) {
           variant="ghost"
           onClick={onCancel}
           disabled={isLoading}
-          className="flex-1"
+          className="flex-1 py-2 md:py-2 text-sm md:text-base"
         >
           취소
         </Button>
