@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시안 C: Timeline-focused (개선)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #FEF3C7 0%, #FEE2E4 100%);
+            color: #1F2937;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+            color: white;
+            padding: 20px 24px;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.2);
+            border-bottom: 4px solid #EA580C;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        .main-layout {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 100px);
+        }
+
+        /* Timeline Section */
+        .timeline-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #F97316;
+        }
+
+        .timeline-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 16px;
+            color: #1F2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timeline-title::before {
+            content: '📅';
+            font-size: 16px;
+        }
+
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .timeline-group {
+            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .timeline-group:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-group.today {
+            border-color: #DC2626;
+            background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+        }
+
+        .timeline-group.tomorrow {
+            border-color: #F97316;
+            background: linear-gradient(135deg, #FFEDD5 0%, #FED7AA 100%);
+        }
+
+        .timeline-group.upcoming {
+            border-color: #06B6D4;
+            background: linear-gradient(135deg, #CFFAFE 0%, #A5F3FC 100%);
+        }
+
+        .timeline-date {
+            font-weight: 700;
+            font-size: 13px;
+            color: #1F2937;
+            margin-bottom: 4px;
+        }
+
+        .timeline-count {
+            font-size: 11px;
+            color: #6B7280;
+            font-weight: 500;
+        }
+
+        /* Kanban Board Section */
+        .board-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            border-top: 4px solid #06B6D4;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .board-title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 16px;
+            color: #1F2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .board-title::before {
+            content: '🎯';
+            font-size: 16px;
+        }
+
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            flex: 1;
+        }
+
+        .kanban-column {
+            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+            border-radius: 12px;
+            padding: 14px;
+            border-left: 4px solid;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .col-todo { border-left-color: #F97316; }
+        .col-inprogress { border-left-color: #06B6D4; }
+        .col-done { border-left-color: #22C55E; }
+
+        .column-header {
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .column-count {
+            margin-left: auto;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: move;
+            transition: all 0.2s ease;
+            font-size: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border-color: #D1D5DB;
+        }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #111827;
+        }
+
+        .card-due {
+            font-size: 11px;
+            color: #6B7280;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-due.urgent {
+            color: #DC2626;
+            font-weight: 600;
+        }
+
+        .deadline-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            background: rgba(249, 115, 22, 0.1);
+            color: #F97316;
+        }
+
+        .deadline-badge.urgent {
+            background: rgba(220, 38, 38, 0.1);
+            color: #DC2626;
+        }
+
+        .deadline-badge.done {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22C55E;
+        }
+
+        .add-card {
+            padding: 10px;
+            border: 2px dashed #D1D5DB;
+            border-radius: 8px;
+            text-align: center;
+            color: #9CA3AF;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .add-card:hover {
+            border-color: #F97316;
+            color: #F97316;
+            background: rgba(249, 115, 22, 0.05);
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #6B7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #F97316;
+        }
+
+        @media (max-width: 1024px) {
+            .kanban-board {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+
+            .timeline-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .header {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+
+            .kanban-column {
+                min-height: auto;
+            }
+
+            .timeline-section {
+                padding: 12px;
+            }
+
+            .timeline-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .timeline-date {
+                font-size: 12px;
+            }
+
+            .timeline-count {
+                font-size: 10px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(3, 1fr);
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .stat-item {
+                padding: 8px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-layout {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .header {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .header p {
+                font-size: 12px;
+            }
+
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .timeline-section,
+            .board-section {
+                padding: 12px;
+                border-radius: 12px;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+                padding: 10px;
+                gap: 6px;
+            }
+
+            .card {
+                padding: 10px;
+                font-size: 11px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card, .timeline-group {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>시안 C: Timeline-focused</h1>
+        <p>디자이너 중심 • 기한이 우선 • 스크롤 없는 한눈에 뷰</p>
+    </div>
+
+    <div class="main-layout">
+        <!-- Timeline Section -->
+        <div class="timeline-section">
+            <div class="timeline-title">기한별 요약</div>
+            <div class="timeline-grid">
+                <div class="timeline-group today">
+                    <div class="timeline-date">🔴 오늘</div>
+                    <div class="timeline-count">1개</div>
+                </div>
+                <div class="timeline-group tomorrow">
+                    <div class="timeline-date">🟠 내일</div>
+                    <div class="timeline-count">2개</div>
+                </div>
+                <div class="timeline-group upcoming">
+                    <div class="timeline-date">🔵 2일 뒤</div>
+                    <div class="timeline-count">2개</div>
+                </div>
+                <div class="timeline-group upcoming">
+                    <div class="timeline-date">🟢 3일 뒤</div>
+                    <div class="timeline-count">2개</div>
+                </div>
+                <div class="timeline-group">
+                    <div class="timeline-date">⚪ 1주</div>
+                    <div class="timeline-count">1개</div>
+                </div>
+                <div class="timeline-group">
+                    <div class="timeline-date">✅ 완료</div>
+                    <div class="timeline-count">8개</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-label">오늘 기한</div>
+                <div class="stat-value">1</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">이번 주</div>
+                <div class="stat-value">8</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">진행 중</div>
+                <div class="stat-value">5</div>
+            </div>
+        </div>
+
+        <!-- Kanban Board Section -->
+        <div class="board-section">
+            <div class="board-title">칸반 보드</div>
+            <div class="kanban-board">
+                <!-- To Do -->
+                <div class="kanban-column col-todo">
+                    <div class="column-header">
+                        <span>📋 To Do</span>
+                        <span class="column-count">3</span>
+                    </div>
+                    <div class="cards-list">
+                        <div class="card">
+                            <div class="card-title">로그인 CSS 깨짐</div>
+                            <div class="card-due urgent">
+                                <span class="deadline-badge urgent">⏰ 오늘</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">메인 페이지 반응형</div>
+                            <div class="card-due">
+                                <span class="deadline-badge">📅 3일</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">다크모드 추가</div>
+                            <div class="card-due">
+                                <span class="deadline-badge">📅 1주</span>
+                            </div>
+                        </div>
+                        <div class="add-card">+ 새 카드</div>
+                    </div>
+                </div>
+
+                <!-- In Progress -->
+                <div class="kanban-column col-inprogress">
+                    <div class="column-header">
+                        <span>⚙️ In Progress</span>
+                        <span class="column-count">5</span>
+                    </div>
+                    <div class="cards-list">
+                        <div class="card">
+                            <div class="card-title">디자인 시안 작업</div>
+                            <div class="card-due urgent">
+                                <span class="deadline-badge urgent">⏰ 내일</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">API 연동 테스트</div>
+                            <div class="card-due">
+                                <span class="deadline-badge">📅 2일</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">DB 스키마 설계</div>
+                            <div class="card-due">
+                                <span class="deadline-badge">📅 3일</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">UI 컴포넌트</div>
+                            <div class="card-due">
+                                <span class="deadline-badge">📅 5일</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">테스트 작성</div>
+                            <div class="card-due">
+                                <span class="deadline-badge">📅 4일</span>
+                            </div>
+                        </div>
+                        <div class="add-card">+ 새 카드</div>
+                    </div>
+                </div>
+
+                <!-- Done -->
+                <div class="kanban-column col-done">
+                    <div class="column-header">
+                        <span>✅ Done</span>
+                        <span class="column-count">8</span>
+                    </div>
+                    <div class="cards-list">
+                        <div class="card">
+                            <div class="card-title">프로젝트 초기 설정</div>
+                            <div class="card-due">
+                                <span class="deadline-badge done">✓ 완료</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">로그인 페이지 UI</div>
+                            <div class="card-due">
+                                <span class="deadline-badge done">✓ 완료</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">홈 페이지 구성</div>
+                            <div class="card-due">
+                                <span class="deadline-badge done">✓ 완료</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">라우팅 설정</div>
+                            <div class="card-due">
+                                <span class="deadline-badge done">✓ 완료</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">결제 기능 PR</div>
+                            <div class="card-due">
+                                <span class="deadline-badge done">✓ 완료</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">인증 로직</div>
+                            <div class="card-due">
+                                <span class="deadline-badge done">✓ 완료</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">헤더 컴포넌트</div>
+                            <div class="card-due">
+                                <span class="deadline-badge done">✓ 완료</span>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Footer 구현</div>
+                            <div class="card-due">
+                                <span class="deadline-badge done">✓ 완료</span>
+                            </div>
+                        </div>
+                        <div class="add-card">+ 새 카드</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시안 A: Motion-first Kanban</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #F3F4F6;
+            color: #1F2937;
+            overflow-x: auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            color: white;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .kanban-container {
+            display: flex;
+            gap: 20px;
+            padding: 24px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            min-height: calc(100vh - 120px);
+        }
+
+        .kanban-column {
+            flex: 0 0 280px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .kanban-column:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .col-todo .column-header { border-bottom-color: #EC4899; }
+        .col-inprogress .column-header { border-bottom-color: #6366F1; }
+        .col-review .column-header { border-bottom-color: #F59E0B; }
+        .col-done .column-header { border-bottom-color: #10B981; }
+
+        .column-badge {
+            background: #F3F4F6;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .col-todo .column-badge { color: #EC4899; }
+        .col-inprogress .column-badge { color: #6366F1; }
+        .col-review .column-badge { color: #F59E0B; }
+        .col-done .column-badge { color: #10B981; }
+
+        .cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 100px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-left: 4px solid;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: move;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .card.dragging {
+            opacity: 0.7;
+            transform: scale(1.02);
+        }
+
+        .col-todo .card { border-left-color: #EC4899; }
+        .col-inprogress .card { border-left-color: #6366F1; }
+        .col-review .card { border-left-color: #F59E0B; }
+        .col-done .card { border-left-color: #10B981; }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #1F2937;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 11px;
+            color: #6B7280;
+        }
+
+        .priority-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: rgba(236, 72, 153, 0.1);
+            color: #EC4899;
+        }
+
+        .priority-medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: #F59E0B;
+        }
+
+        .priority-low {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10B981;
+        }
+
+        .add-card {
+            padding: 8px 12px;
+            border: 2px dashed #D1D5DB;
+            border-radius: 8px;
+            text-align: center;
+            color: #9CA3AF;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .add-card:hover {
+            border-color: #6366F1;
+            color: #6366F1;
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .kanban-container {
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .kanban-column {
+                flex: 0 0 240px;
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+
+        /* Animation keyframes */
+        @keyframes dragGlow {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            100% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+        }
+
+        .kanban-column.drag-over {
+            animation: dragGlow 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: slideUp 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>시안 A: Motion-first Kanban</h1>
+        <p>개발자 중심. 부드러운 흐름, 드래그 피드백, 실시간 모션</p>
+    </div>
+
+    <div class="kanban-container">
+        <!-- To Do -->
+        <div class="kanban-column col-todo">
+            <div class="column-header">
+                <span>📋 To Do</span>
+                <span class="column-badge">3</span>
+            </div>
+            <div class="cards-list">
+                <div class="card">
+                    <div class="card-title">로그인 CSS 깨짐</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-high">High</span>
+                        <span>내일</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">메인 페이지 반응형</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-medium">Medium</span>
+                        <span>3일</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">다크모드 추가</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-low">Low</span>
+                        <span>1주</span>
+                    </div>
+                </div>
+            </div>
+            <div class="add-card">+ 새 카드</div>
+        </div>
+
+        <!-- In Progress -->
+        <div class="kanban-column col-inprogress">
+            <div class="column-header">
+                <span>⚙️ In Progress</span>
+                <span class="column-badge">5</span>
+            </div>
+            <div class="cards-list">
+                <div class="card">
+                    <div class="card-title">디자인 시안 작업</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-high">High</span>
+                        <span>내일</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">API 연동 테스트</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-medium">Medium</span>
+                        <span>2일</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">DB 스키마 설계</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-medium">Medium</span>
+                        <span>3일</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">UI 컴포넌트</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-low">Low</span>
+                        <span>5일</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">테스트 작성</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-medium">Medium</span>
+                        <span>4일</span>
+                    </div>
+                </div>
+            </div>
+            <div class="add-card">+ 새 카드</div>
+        </div>
+
+        <!-- Review -->
+        <div class="kanban-column col-review">
+            <div class="column-header">
+                <span>👀 Review</span>
+                <span class="column-badge">2</span>
+            </div>
+            <div class="cards-list">
+                <div class="card">
+                    <div class="card-title">결제 기능 PR</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-high">High</span>
+                        <span>내일</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">인증 로직</div>
+                    <div class="card-meta">
+                        <span class="priority-badge priority-medium">Medium</span>
+                        <span>2일</span>
+                    </div>
+                </div>
+            </div>
+            <div class="add-card">+ 새 카드</div>
+        </div>
+
+        <!-- Done -->
+        <div class="kanban-column col-done">
+            <div class="column-header">
+                <span>✅ Done</span>
+                <span class="column-badge">8</span>
+            </div>
+            <div class="cards-list">
+                <div class="card">
+                    <div class="card-title">프로젝트 초기 설정</div>
+                    <div class="card-meta"><span>완료 • 지난주</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">로그인 페이지 UI</div>
+                    <div class="card-meta"><span>완료 • 3일전</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">홈 페이지 구성</div>
+                    <div class="card-meta"><span>완료 • 2일전</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">라우팅 설정</div>
+                    <div class="card-meta"><span>완료 • 1일전</span></div>
+                </div>
+            </div>
+            <div class="add-card">+ 새 카드</div>
+        </div>
+    </div>
+
+    <script>
+        // Drag over animation
+        document.querySelectorAll('.kanban-column').forEach(col => {
+            col.addEventListener('dragover', () => {
+                col.classList.add('drag-over');
+            });
+            col.addEventListener('dragleave', () => {
+                col.classList.remove('drag-over');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시안 C: Timeline-focused</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #F5F5F5;
+            color: #1F2937;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+            color: white;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.2);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            padding: 24px;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Timeline */
+        .timeline {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .timeline-title {
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            color: #6B7280;
+            letter-spacing: 0.5px;
+        }
+
+        .timeline-group {
+            margin-bottom: 20px;
+        }
+
+        .timeline-date {
+            font-weight: 700;
+            font-size: 12px;
+            color: #1F2937;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #F3F4F6;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timeline-date-icon {
+            font-size: 14px;
+        }
+
+        .timeline-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-left: 12px;
+            border-left: 2px solid #E5E7EB;
+            padding-left: 12px;
+        }
+
+        .timeline-card-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #06B6D4;
+            position: absolute;
+            left: -6px;
+            top: 4px;
+        }
+
+        .timeline-card {
+            position: relative;
+            padding: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #6B7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-card:hover {
+            color: #1F2937;
+            font-weight: 600;
+        }
+
+        .timeline-card.overdue {
+            color: #DC2626;
+            font-weight: 600;
+        }
+
+        /* Board Section */
+        .kanban-board {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .kanban-column {
+            flex: 0 0 300px;
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .column-header {
+            font-weight: 700;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 3px solid;
+            padding-bottom: 12px;
+        }
+
+        .col-todo .column-header { border-bottom-color: #F97316; }
+        .col-inprogress .column-header { border-bottom-color: #06B6D4; }
+        .col-done .column-header { border-bottom-color: #22C55E; }
+
+        .column-count {
+            margin-left: auto;
+            background: #F3F4F6;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-left: 4px solid;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: move;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .col-todo .card { border-left-color: #F97316; }
+        .col-inprogress .card { border-left-color: #06B6D4; }
+        .col-done .card { border-left-color: #22C55E; }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .card-due {
+            font-size: 11px;
+            color: #6B7280;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .card-due.urgent {
+            color: #DC2626;
+            font-weight: 600;
+        }
+
+        .deadline-counter {
+            font-size: 10px;
+            background: rgba(249, 115, 22, 0.1);
+            color: #F97316;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .deadline-counter.urgent {
+            background: rgba(220, 38, 38, 0.1);
+            color: #DC2626;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline {
+                max-height: 150px;
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+            }
+
+            .timeline-group {
+                flex: 0 0 auto;
+                margin-bottom: 0;
+            }
+
+            .timeline-cards {
+                display: flex;
+                gap: 4px;
+                flex-direction: row;
+                border-left: none;
+                border-bottom: 2px solid #E5E7EB;
+                padding: 4px 8px 8px 0;
+                margin-left: 0;
+            }
+
+            .timeline-card {
+                padding: 4px 8px;
+                background: #F3F4F6;
+                border-radius: 6px;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .kanban-column {
+                flex: 0 0 200px;
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .timeline {
+                max-height: 120px;
+            }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .timeline-card {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F3F4F6;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #D1D5DB;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9CA3AF;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>시안 C: Timeline-focused</h1>
+        <p>디자이너 중심. 기한이 우선. 시간의 흐름으로 카드 정렬</p>
+    </div>
+
+    <div class="main-layout">
+        <!-- Timeline -->
+        <div class="timeline">
+            <div class="timeline-title">📅 기한별</div>
+
+            <!-- Today -->
+            <div class="timeline-group">
+                <div class="timeline-date">
+                    <span class="timeline-date-icon">🔴</span>
+                    <span>오늘</span>
+                </div>
+                <div class="timeline-cards">
+                    <div class="timeline-card overdue" title="로그인 CSS 깨짐">
+                        로그인 CSS
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tomorrow -->
+            <div class="timeline-group">
+                <div class="timeline-date">
+                    <span class="timeline-date-icon">🟠</span>
+                    <span>내일</span>
+                </div>
+                <div class="timeline-cards">
+                    <div class="timeline-card" title="디자인 시안 작업">디자인</div>
+                    <div class="timeline-card" title="결제 기능 PR">결제 PR</div>
+                </div>
+            </div>
+
+            <!-- 2 days -->
+            <div class="timeline-group">
+                <div class="timeline-date">
+                    <span class="timeline-date-icon">🟡</span>
+                    <span>2일 뒤</span>
+                </div>
+                <div class="timeline-cards">
+                    <div class="timeline-card" title="API 연동 테스트">API</div>
+                    <div class="timeline-card" title="인증 로직">인증</div>
+                </div>
+            </div>
+
+            <!-- 3 days -->
+            <div class="timeline-group">
+                <div class="timeline-date">
+                    <span class="timeline-date-icon">🟢</span>
+                    <span>3일 뒤</span>
+                </div>
+                <div class="timeline-cards">
+                    <div class="timeline-card" title="DB 스키마 설계">DB</div>
+                    <div class="timeline-card" title="메인 페이지 반응형">반응형</div>
+                </div>
+            </div>
+
+            <!-- 1 week -->
+            <div class="timeline-group">
+                <div class="timeline-date">
+                    <span class="timeline-date-icon">⚪</span>
+                    <span>1주</span>
+                </div>
+                <div class="timeline-cards">
+                    <div class="timeline-card" title="다크모드 추가">다크모드</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kanban Board -->
+        <div class="kanban-board">
+            <!-- To Do -->
+            <div class="kanban-column col-todo">
+                <div class="column-header">
+                    <span>📋 To Do</span>
+                    <span class="column-count">3</span>
+                </div>
+                <div class="cards-list">
+                    <div class="card">
+                        <div class="card-title">로그인 CSS 깨짐</div>
+                        <div class="card-due urgent">
+                            <span>⏰</span>
+                            <span class="deadline-counter urgent">오늘</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">메인 페이지 반응형</div>
+                        <div class="card-due">
+                            <span>📅</span>
+                            <span>3일</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">다크모드 추가</div>
+                        <div class="card-due">
+                            <span>📅</span>
+                            <span>1주</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- In Progress -->
+            <div class="kanban-column col-inprogress">
+                <div class="column-header">
+                    <span>⚙️ In Progress</span>
+                    <span class="column-count">5</span>
+                </div>
+                <div class="cards-list">
+                    <div class="card">
+                        <div class="card-title">디자인 시안 작업</div>
+                        <div class="card-due urgent">
+                            <span>⏰</span>
+                            <span class="deadline-counter urgent">내일</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">API 연동 테스트</div>
+                        <div class="card-due">
+                            <span>📅</span>
+                            <span>2일</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">DB 스키마 설계</div>
+                        <div class="card-due">
+                            <span>📅</span>
+                            <span>3일</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">UI 컴포넌트</div>
+                        <div class="card-due">
+                            <span>📅</span>
+                            <span>5일</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">테스트 작성</div>
+                        <div class="card-due">
+                            <span>📅</span>
+                            <span>4일</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Done -->
+            <div class="kanban-column col-done">
+                <div class="column-header">
+                    <span>✅ Done</span>
+                    <span class="column-count">8</span>
+                </div>
+                <div class="cards-list">
+                    <div class="card">
+                        <div class="card-title">프로젝트 초기 설정</div>
+                        <div class="card-due">
+                            <span>✓</span>
+                            <span>완료</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">로그인 페이지 UI</div>
+                        <div class="card-due">
+                            <span>✓</span>
+                            <span>완료</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">홈 페이지 구성</div>
+                        <div class="card-due">
+                            <span>✓</span>
+                            <span>완료</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">라우팅 설정</div>
+                        <div class="card-due">
+                            <span>✓</span>
+                            <span>완료</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">결제 기능 PR</div>
+                        <div class="card-due">
+                            <span>✓</span>
+                            <span>완료</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">인증 로직</div>
+                        <div class="card-due">
+                            <span>✓</span>
+                            <span>완료</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">헤더 컴포넌트</div>
+                        <div class="card-due">
+                            <span>✓</span>
+                            <span>완료</span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Footer 구현</div>
+                        <div class="card-due">
+                            <span>✓</span>
+                            <span>완료</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

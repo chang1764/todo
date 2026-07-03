@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시안 B: Dashboard-integrated</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #FAFAFA;
+            color: #1F2937;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+            color: white;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 20px;
+            padding: 24px;
+            min-height: calc(100vh - 120px);
+        }
+
+        .kanban-board {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .kanban-column {
+            flex: 0 0 260px;
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .col-todo .column-header { border-bottom-color: #EC4899; }
+        .col-inprogress .column-header { border-bottom-color: #8B5CF6; }
+        .col-review .column-header { border-bottom-color: #F59E0B; }
+        .col-done .column-header { border-bottom-color: #14B8A6; }
+
+        .column-badge {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: auto;
+            border-radius: 50px;
+        }
+
+        .cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 100px;
+        }
+
+        .card {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-left: 4px solid;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: move;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background: white;
+        }
+
+        .col-todo .card { border-left-color: #EC4899; }
+        .col-inprogress .card { border-left-color: #8B5CF6; }
+        .col-review .card { border-left-color: #F59E0B; }
+        .col-done .card { border-left-color: #14B8A6; }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #111827;
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 6px;
+            font-size: 11px;
+            color: #6B7280;
+        }
+
+        .priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .priority-high .priority-dot { background: #EC4899; }
+        .priority-medium .priority-dot { background: #F59E0B; }
+        .priority-low .priority-dot { background: #14B8A6; }
+
+        /* Dashboard Panel */
+        .dashboard {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .dashboard-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #1F2937;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #F0F4FF 0%, #F5F3FF 100%);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid #E9D5FF;
+        }
+
+        .stat-card.primary {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            color: white;
+            border: none;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .add-card {
+            padding: 10px 12px;
+            border: 2px dashed #D1D5DB;
+            border-radius: 8px;
+            text-align: center;
+            color: #9CA3AF;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+            background: #F9FAFB;
+        }
+
+        .add-card:hover {
+            border-color: #8B5CF6;
+            color: #8B5CF6;
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .team-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard {
+                order: -1;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-value {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .kanban-board {
+                gap: 12px;
+            }
+
+            .kanban-column {
+                flex: 0 0 calc(50% - 6px);
+                padding: 12px;
+            }
+
+            .kanban-column:nth-child(n+3) {
+                display: none;
+            }
+
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .header p {
+                font-size: 12px;
+            }
+
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+                order: 1;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .stat-card {
+                padding: 10px;
+            }
+
+            .stat-value {
+                font-size: 18px;
+            }
+
+            .stat-label {
+                font-size: 10px;
+            }
+
+            .column-header {
+                font-size: 12px;
+            }
+
+            .card {
+                padding: 10px;
+                font-size: 12px;
+            }
+
+            .card-title {
+                margin-bottom: 4px;
+            }
+
+            .card-meta {
+                font-size: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .kanban-column {
+                flex: 0 0 100%;
+            }
+
+            .kanban-board {
+                gap: 8px;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .header {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 16px;
+            }
+
+            .main-layout {
+                padding: 8px;
+                gap: 8px;
+            }
+        }
+
+        @keyframes countUp {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .stat-value {
+            animation: countUp 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>시안 B: Dashboard-integrated</h1>
+        <p>PM 중심. 실시간 통계, 팀 협력 강조</p>
+    </div>
+
+    <div class="main-layout">
+        <div class="kanban-board">
+            <!-- To Do -->
+            <div class="kanban-column col-todo">
+                <div class="column-header">
+                    <span>📋 To Do</span>
+                    <span class="column-badge">3</span>
+                </div>
+                <div class="cards-list">
+                    <div class="card priority-high">
+                        <div class="card-title">로그인 CSS 깨짐</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>내일</span>
+                        </div>
+                    </div>
+                    <div class="card priority-medium">
+                        <div class="card-title">메인 페이지 반응형</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>3일</span>
+                        </div>
+                    </div>
+                    <div class="card priority-low">
+                        <div class="card-title">다크모드 추가</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>1주</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="add-card">+ 새 카드</div>
+            </div>
+
+            <!-- In Progress -->
+            <div class="kanban-column col-inprogress">
+                <div class="column-header">
+                    <span>⚙️ In Progress</span>
+                    <span class="column-badge">5</span>
+                </div>
+                <div class="cards-list">
+                    <div class="card priority-high">
+                        <div class="card-title">디자인 시안 작업</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>내일</span>
+                        </div>
+                    </div>
+                    <div class="card priority-medium">
+                        <div class="card-title">API 연동 테스트</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>2일</span>
+                        </div>
+                    </div>
+                    <div class="card priority-medium">
+                        <div class="card-title">DB 스키마</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>3일</span>
+                        </div>
+                    </div>
+                    <div class="card priority-low">
+                        <div class="card-title">UI 컴포넌트</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>5일</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="add-card">+ 새 카드</div>
+            </div>
+
+            <!-- Review -->
+            <div class="kanban-column col-review">
+                <div class="column-header">
+                    <span>👀 Review</span>
+                    <span class="column-badge">2</span>
+                </div>
+                <div class="cards-list">
+                    <div class="card priority-high">
+                        <div class="card-title">결제 기능 PR</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>내일</span>
+                        </div>
+                    </div>
+                    <div class="card priority-medium">
+                        <div class="card-title">인증 로직</div>
+                        <div class="card-meta">
+                            <span class="priority-dot"></span>
+                            <span>2일</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="add-card">+ 새 카드</div>
+            </div>
+
+            <!-- Done -->
+            <div class="kanban-column col-done">
+                <div class="column-header">
+                    <span>✅ Done</span>
+                    <span class="column-badge">8</span>
+                </div>
+                <div class="cards-list">
+                    <div class="card">
+                        <div class="card-title">프로젝트 초기 설정</div>
+                        <div class="card-meta"><span>지난주</span></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">로그인 페이지</div>
+                        <div class="card-meta"><span>3일전</span></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">홈 페이지</div>
+                        <div class="card-meta"><span>2일전</span></div>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">라우팅</div>
+                        <div class="card-meta"><span>1일전</span></div>
+                    </div>
+                </div>
+                <div class="add-card">+ 새 카드</div>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard">
+            <div class="dashboard-title">이번 주</div>
+
+            <div class="stat-card primary">
+                <div class="stat-label">완료</div>
+                <div class="stat-value">8</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">진행 중</div>
+                <div class="stat-value">5</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">리뷰 대기</div>
+                <div class="stat-value">2</div>
+            </div>
+
+            <div style="border-top: 1px solid #E5E7EB; padding-top: 12px;">
+                <div class="stat-label" style="text-align: left;">가장 활발</div>
+                <div class="team-avatar">이</div>
+                <div style="font-size: 12px; margin-top: 4px;">이수진 • +6</div>
+            </div>
+
+            <div style="border-top: 1px solid #E5E7EB; padding-top: 12px;">
+                <div class="stat-label" style="text-align: left; color: #DC2626;">기한 임박</div>
+                <div style="font-size: 20px; font-weight: 700; margin-top: 4px;">2개</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
