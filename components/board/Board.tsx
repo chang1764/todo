@@ -20,6 +20,7 @@ export function Board() {
     columnId?: string;
   }>({ isOpen: false });
   const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<string | null>(null); // null = "전체", otherwise = columnId
 
   const handleAddCard = (columnId: string) => {
     setModalState({ isOpen: true, columnId });
@@ -77,12 +78,48 @@ export function Board() {
     );
   }
 
+  // 모바일에서는 탭 표시, 데스크톱에서는 탭 + 전체 보드
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const showTabs = isMobile;
+  const displayAllColumns = !selectedTab;
+
   return (
     <DndContext onDragEnd={handleBoardDragEnd}>
       <div className="h-full flex flex-col">
-        <div className="flex gap-3 md:gap-6 overflow-x-auto pb-4 flex-1 px-2 md:px-0">
+        {/* 모바일 탭 */}
+        {showTabs && (
+          <div className="flex gap-2 overflow-x-auto pb-2 px-2 border-b border-slate-200 bg-white">
+            <button
+              onClick={() => setSelectedTab(null)}
+              className={`px-3 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition ${
+                selectedTab === null
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              All
+            </button>
+            {columns.map((col) => (
+              <button
+                key={col.id}
+                onClick={() => setSelectedTab(col.id)}
+                className={`px-3 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition ${
+                  selectedTab === col.id
+                    ? 'bg-slate-900 text-white'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {col.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 컬럼 표시 영역 */}
+        <div className={`flex-1 overflow-x-auto flex ${displayAllColumns && isMobile ? 'flex-col' : 'flex-row'} gap-3 md:gap-6 pb-4 px-2 md:px-0`}>
           {columns
             .sort((a, b) => a.position - b.position)
+            .filter((col) => !showTabs || displayAllColumns || col.id === selectedTab)
             .map((column) => (
               <Column
                 key={column.id}
@@ -90,6 +127,7 @@ export function Board() {
                 cards={cards}
                 onCardClick={handleCardClick}
                 onAddCard={handleAddCard}
+                isFullWidth={displayAllColumns && isMobile}
               />
             ))}
 

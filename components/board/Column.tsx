@@ -11,9 +11,10 @@ interface ColumnProps {
   cards: CardType[];
   onCardClick: (card: CardType) => void;
   onAddCard: (columnId: string) => void;
+  isFullWidth?: boolean;
 }
 
-export function Column({ column, cards, onCardClick, onAddCard }: ColumnProps) {
+export function Column({ column, cards, onCardClick, onAddCard, isFullWidth = false }: ColumnProps) {
   const { handleDeleteColumn } = useColumns();
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
   const columnCards = cards
@@ -23,7 +24,7 @@ export function Column({ column, cards, onCardClick, onAddCard }: ColumnProps) {
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col rounded-xl p-3 md:p-4 min-w-72 md:min-w-96 h-fit max-h-[calc(100vh-150px)] border-2 transition-all ${
+      className={`flex flex-col rounded-xl p-3 md:p-4 ${isFullWidth ? 'w-full h-fit' : 'min-w-72 md:min-w-96 max-h-[calc(100vh-150px)]'} border-2 transition-all ${
         isOver
           ? 'bg-blue-50 border-blue-300 shadow-lg'
           : 'bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200'
